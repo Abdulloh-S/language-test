@@ -1,0 +1,161 @@
+<!doctype html>
+<html lang="ru"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Проверка уровня языка</title>
+<style>
+:root{--bg:#eef2f7;--card:#fff;--ink:#101828;--mut:#5b6678;--ac:#0f766e;--acs:#d5efec;--br:#d5dce6}
+@media (prefers-color-scheme:dark){:root{--bg:#0e141b;--card:#18212b;--ink:#eaf0f7;--mut:#9aa8ba;--ac:#4fd1c5;--acs:#17363a;--br:#2a3644}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.55 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+main{max-width:720px;margin:0 auto;padding:20px 16px 48px}
+h1,h2,.lvl{font-family:Georgia,"Times New Roman",serif;font-weight:700;letter-spacing:-.01em}
+h1{font-size:clamp(30px,7vw,46px);line-height:1.1;margin:28px 0 12px}
+h2{font-size:22px;line-height:1.3;margin:14px 0}
+.lead,.mut{color:var(--mut)}
+.lead{max-width:58ch;margin:0 0 24px}
+.grid{display:grid;gap:12px}
+button{font:inherit;color:inherit}
+.card{display:flex;align-items:center;gap:16px;text-align:left;width:100%;padding:18px;background:var(--card);border:1.5px solid var(--br);border-radius:14px;cursor:pointer}
+.card:hover,.opt:hover{border-color:var(--ac)}
+.card b{font-size:20px;display:block}
+.fl{font-size:38px}
+:focus-visible{outline:3px solid var(--ac);outline-offset:2px}
+.top{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}
+.ghost{background:none;border:0;color:var(--mut);cursor:pointer;padding:8px 4px}
+.bar{height:6px;background:var(--br);border-radius:9px;overflow:hidden}
+.bar i{display:block;height:100%;background:var(--ac);transition:width .25s}
+.sec{margin:14px 0 0;color:var(--mut);font-size:14px}
+blockquote{margin:12px 0;padding:14px 16px;background:var(--card);border-left:4px solid var(--ac);border-radius:6px;font-family:Georgia,serif}
+.opts{display:grid;gap:10px;margin-top:8px}
+.opt{padding:14px 16px;text-align:left;background:var(--card);border:1.5px solid var(--br);border-radius:12px;cursor:pointer}
+.skip{color:var(--mut);background:none;border-style:dashed}
+.btn{background:var(--ac);color:var(--bg);border:0;border-radius:10px;padding:11px 18px;font-weight:600;cursor:pointer;margin:4px 6px 4px 0}
+textarea{width:100%;padding:12px;border:1.5px solid var(--br);border-radius:12px;background:var(--card);color:var(--ink);font:inherit}
+.res{background:var(--card);border:1.5px solid var(--br);border-radius:16px;padding:22px;margin-top:14px}
+.lvl{font-size:76px;line-height:1;color:var(--ac)}
+.row{display:grid;grid-template-columns:150px 1fr 48px;gap:10px;align-items:center;margin:10px 0;font-size:14px}
+.row .bar{height:10px}
+.ex{background:var(--acs);padding:10px 14px;border-radius:10px;margin:8px 0}
+.note{font-size:13px;color:var(--mut);margin-top:14px}
+</style></head>
+<body><main id="app"></main>
+<script>
+var LV=["A1","A2","B1","B2","C1","C2"];
+var NM=["Начальный","Элементарный","Средний","Выше среднего","Продвинутый","Профессиональный"];
+var DS=["Понимаете простые фразы и знакомые слова.","Справляетесь с простыми бытовыми ситуациями.","Можете общаться в поездках и писать простые тексты.","Свободно общаетесь на знакомые темы и понимаете сложные тексты.","Гибко и точно владеете языком в работе и учёбе.","Уровень, близкий к образованному носителю."];
+/* БАНК ВОПРОСОВ. G: массивы по уровням A1..C2, формат "вопрос|верный|неверный|неверный".
+   L и R: "уровень|текст|вопрос|верный|неверный|неверный". Чтобы расширить тест, просто добавляйте строки. */
+var D={
+en:{o:"Английский",f:"🇬🇧",v:"en-GB",
+G:[["She ___ a teacher.|is|are|am","I ___ coffee every morning.|drink|drinks|drinking","There ___ two apples on the table.|are|is|be","This is ___ book.|my|me|I","___ you like pizza?|Do|Does|Are"],
+["We ___ to the cinema yesterday.|went|go|gone","This bag is ___ than that one.|cheaper|more cheap|cheapest","I’m ___ to visit my aunt tomorrow.|going|go|went","There isn’t ___ milk in the fridge.|any|some|a","She can’t come ___ she is ill.|because|so|but"],
+["If it rains tomorrow, we ___ the picnic.|will cancel|would cancel|cancelled","I’ve lived here ___ 2019.|since|for|from","You ___ smoke in the hospital.|mustn’t|don’t have to|needn’t to","She asked me where I ___.|lived|do live|living","The film was so boring that I fell ___.|asleep|sleep|sleeping"],
+["By the time she arrived, we ___ dinner.|had already finished|have already finished|already finish","He suggested ___ earlier.|leaving|to leave|leave","I wish I ___ more time.|had|have|would have","The house ___ in 1990.|was built|built|has built","She’s used to ___ up early.|getting|get|got"],
+["Not only ___ late, but he also forgot the documents.|was he|he was|he is","To “mitigate” a risk means to…|reduce its severity|increase it|ignore it","Had I known, I ___ differently.|would have acted|would act|will act","The committee insisted that he ___ the report.|submit|submits|submitted","She’s ___ to criticism.|impervious|imperious|impetuous"],
+["Scarcely ___ the room when the alarm went off.|had he entered|he had entered|did he entered","“Ephemeral” means…|lasting a very short time|lasting forever|extremely important","The policy was seen as ___, serving the powerful at everyone else’s expense.|iniquitous|ubiquitous|innocuous","She resigned, ___ her colleagues’ pleas.|notwithstanding|albeit|whereas","“Equivocal” means…|open to more than one interpretation|completely clear|very similar"]],
+L:["0|My name is Anna and I am twenty years old.|How old is Anna?|20|12|22","1|The train to Manchester leaves at half past nine from platform four.|What time does the train leave?|9:30|9:00|4:30","2|I’m sorry, the meeting has been moved from Tuesday to Thursday afternoon.|When is the meeting now?|Thursday afternoon|Tuesday afternoon|Thursday morning","3|Although the hotel was expensive, we decided to stay because it was right next to the beach.|Why did they stay at the hotel?|It was near the beach|It was cheap|It was recommended","4|Far from welcoming the proposal, the residents argued that it would merely shift traffic onto side streets.|What was the residents’ view?|The plan would move the problem elsewhere|The plan would solve the traffic|They had no opinion"],
+R:["2|Maria moved to London in March for a new job. At first she found the city expensive, but joining a running club helped her make friends.|What helped Maria make friends?|A running club|Her new job|The weather","3|The museum, previously open daily, will close on Mondays from next month because of a shortage of staff.|Why is the museum changing its hours?|It has too few staff|It has fewer visitors|It is being repaired","4|Critics of the scheme contend that, while it purports to cut costs, its administrative overhead will in practice outweigh any savings.|What do critics claim?|The costs may exceed the savings|The scheme will save money|The scheme is too small"],
+W:"Describe your last holiday or a place you would like to visit.|Describe your daily routine and what you would like to change in it.|Explain whether you prefer living in a city or in the countryside, and why.",
+S:"The weather was lovely, so we decided to walk along the river.|I would have called you earlier if I had known about the delay.|She has been learning the language for three years now."},
+es:{o:"Испанский",f:"🇪🇸",v:"es-ES",
+G:[["Yo ___ estudiante.|soy|estoy|tengo","Ella ___ dos hermanos.|tiene|es|hay","Nosotros ___ en Madrid.|vivimos|vive|viven","Esta es ___ casa.|mi|yo|me","¿___ te llamas?|Cómo|Qué|Dónde"],
+["Ayer nosotros ___ al cine.|fuimos|vamos|iremos","Mi casa es ___ que la tuya.|más grande|muy grande|grande más","Mañana ___ a visitar a mi tía.|voy|fui|iba","Hay ___ gente en la calle.|mucha|muchos|mucho","Ella no puede venir ___ está enferma.|porque|por qué|porqué"],
+["Si tengo tiempo, ___ a verte.|iré|fui|iba","Llevo dos años ___ español.|estudiando|estudio|estudié","No ___ fumar en el hospital.|se puede|se pueden|puedes se","Me preguntó dónde ___.|vivía|vivo|vivir","Es importante ___ agua todos los días.|beber|bebo|bebiendo"],
+["Cuando llegué, ellos ya ___.|se habían ido|se fueron|se van","Espero que ___ pronto.|vengas|vienes|vendrás","Ojalá ___ más tiempo.|tuviera|tengo|tendré","La casa ___ en 1990.|fue construida|construyó|ha construido","Estoy acostumbrado ___ temprano.|a madrugar|madrugar|de madrugar"],
+["Si lo hubiera sabido, no ___.|habría venido|vendré|vine","“Disipar” significa…|hacer desaparecer|acumular|comprar","Me sorprende que no ___ llamado.|haya|ha|hubiera","El comité exigió que él ___ el informe.|presentara|presentó|presentará","Se mostró ___ ante las críticas.|impasible|impensable|imposible"],
+["No es que ___ razón, es que no lo explicas bien.|tengas|tienes|tuviste","“Efímero” significa…|de corta duración|eterno|muy importante","La medida fue calificada de ___, pues beneficiaba solo a unos pocos.|inicua|ubicua|inocua","___ las advertencias, decidió seguir adelante.|Pese a|Aunque|Porque","“Equívoco” (adj.) significa…|que admite varias interpretaciones|completamente claro|muy parecido"]],
+L:["0|Me llamo Ana y tengo veinte años.|¿Cuántos años tiene Ana?|20|12|22","1|El tren a Valencia sale a las nueve y media de la vía cuatro.|¿A qué hora sale el tren?|9:30|9:00|4:30","2|Lo siento, la reunión se ha cambiado del martes al jueves por la tarde.|¿Cuándo es ahora la reunión?|El jueves por la tarde|El martes por la tarde|El jueves por la mañana","3|Aunque el hotel era caro, decidimos quedarnos porque estaba justo al lado de la playa.|¿Por qué se quedaron en el hotel?|Estaba junto a la playa|Era barato|Se lo recomendaron","4|Lejos de acoger la propuesta, los vecinos sostuvieron que solo trasladaría el tráfico a las calles laterales.|¿Qué opinaban los vecinos?|Que el problema se movería a otro sitio|Que resolvería el tráfico|Que no tenían opinión"],
+R:["2|Carlos se mudó a Madrid en marzo por un trabajo nuevo. Al principio la ciudad le parecía cara, pero entrar en un club de senderismo le ayudó a hacer amigos.|¿Qué le ayudó a hacer amigos?|Un club de senderismo|Su nuevo trabajo|El clima","3|El museo, abierto antes todos los días, cerrará los lunes a partir del mes que viene por falta de personal.|¿Por qué cambia el horario el museo?|Tiene poco personal|Tiene menos visitantes|Está en obras","4|Los críticos del plan sostienen que, aunque pretende reducir costes, su gestión administrativa acabará superando cualquier ahorro.|¿Qué afirman los críticos?|Que los costes pueden superar el ahorro|Que el plan ahorrará dinero|Que el plan es muy pequeño"],
+W:"Describe tus últimas vacaciones o un lugar que te gustaría visitar.|Describe tu rutina diaria y qué te gustaría cambiar.|Explica si prefieres vivir en la ciudad o en el campo, y por qué.",
+S:"Hacía buen tiempo, así que decidimos pasear por el río.|Te habría llamado antes si hubiera sabido del retraso.|Lleva tres años aprendiendo el idioma."},
+fr:{o:"Французский",f:"🇫🇷",v:"fr-FR",
+G:[["Je ___ étudiant.|suis|ai|vais","Elle ___ deux frères.|a|est|fait","Nous ___ à Paris.|habitons|habite|habitez","C’est ___ livre.|mon|moi|me","Tu ___ du café ?|veux|veut|voulez"],
+["Hier, nous ___ au cinéma.|sommes allés|allons|irons","Ma maison est ___ que la tienne.|plus grande|plus grand|grande plus","Demain, je ___ voir ma tante.|vais|ai|suis","Il n’y a pas ___ lait dans le frigo.|de|du|des","Elle ne peut pas venir ___ elle est malade.|parce qu’|pour qu’|afin qu’"],
+["S’il pleut demain, nous ___ le pique-nique.|annulerons|annulerions|annulé","J’habite ici ___ 2019.|depuis|pendant|il y a","Il est interdit ___ dans l’hôpital.|de fumer|fumer|à fumer","Il m’a demandé où je ___.|habitais|habite|habiterai","Le film était si ennuyeux que je me suis ___.|endormi|dormir|endormant"],
+["Quand je suis arrivé, ils ___ déjà partis.|étaient|avaient|ont","Il faut que tu ___ plus tôt.|viennes|viens|viendras","Si seulement j’___ plus de temps !|avais|ai|aurai","La maison ___ en 1990.|a été construite|a construit|est construit","Je m’habitue ___ tôt.|à me lever|me lever|de me lever"],
+["Si j’avais su, je ne ___ pas venu.|serais|suis|aurais","“Atténuer” signifie…|rendre moins fort|aggraver|ignorer","Je regrette qu’il ne ___ pas téléphoné.|ait|a|avait","Le comité a exigé qu’il ___ le rapport.|remette|remet|remettra","Il est resté ___ aux critiques.|impassible|impensable|impossible"],
+["Bien qu’il ___ tard, nous avons continué.|fût|était|sera","“Éphémère” signifie…|de courte durée|éternel|très important","La mesure fut jugée ___, car elle ne profitait qu’à quelques-uns.|inique|unique|innocente","___ les avertissements, il est allé de l’avant.|Malgré|Parce que|Puisque","“Équivoque” signifie…|qui prête à plusieurs interprétations|tout à fait clair|très semblable"]],
+L:["0|Je m’appelle Anne et j’ai vingt ans.|Quel âge a Anne ?|20|12|22","1|Le train pour Marseille part à neuf heures et demie, voie quatre.|À quelle heure part le train ?|9:30|9:00|4:30","2|Désolé, la réunion a été déplacée du mardi au jeudi après-midi.|Quand a lieu la réunion maintenant ?|Jeudi après-midi|Mardi après-midi|Jeudi matin","3|Bien que l’hôtel soit cher, nous avons décidé d’y rester parce qu’il était juste à côté de la plage.|Pourquoi sont-ils restés à l’hôtel ?|Il était près de la plage|Il était bon marché|On le leur avait recommandé","4|Loin d’accueillir la proposition, les habitants ont soutenu qu’elle ne ferait que déplacer la circulation vers les petites rues.|Quel était l’avis des habitants ?|Le problème serait simplement déplacé|La circulation serait résolue|Ils n’avaient pas d’avis"],
+R:["2|Claire a déménagé à Lyon en mars pour un nouveau travail. Au début, la ville lui semblait chère, mais un club de randonnée l’a aidée à se faire des amis.|Qu’est-ce qui l’a aidée à se faire des amis ?|Un club de randonnée|Son nouveau travail|Le climat","3|Le musée, autrefois ouvert tous les jours, fermera le lundi dès le mois prochain par manque de personnel.|Pourquoi le musée change-t-il ses horaires ?|Il manque de personnel|Il a moins de visiteurs|Il est en travaux","4|Les détracteurs du projet affirment que, s’il prétend réduire les coûts, sa gestion administrative finira par dépasser toute économie.|Que prétendent les détracteurs ?|Les coûts pourraient dépasser les économies|Le projet fera économiser de l’argent|Le projet est trop petit"],
+W:"Décris tes dernières vacances ou un lieu que tu aimerais visiter.|Décris ta routine quotidienne et ce que tu voudrais changer.|Explique si tu préfères vivre en ville ou à la campagne, et pourquoi.",
+S:"Il faisait beau, alors nous avons décidé de nous promener au bord de la rivière.|Je t’aurais appelé plus tôt si j’avais su pour le retard.|Elle apprend la langue depuis trois ans."}
+};
+var S,$=function(s){return document.querySelector(s)},app=$("#app");
+var SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+var T="GGGGLGGGRGGGLGRGGG".split(""),N=T.length;
+var GR=[];for(var i=-40;i<=40;i++)GR.push(i/10);
+function shuf(a){for(var i=a.length-1;i>0;i--){var j=Math.floor(Math.random()*(i+1)),t=a[i];a[i]=a[j];a[j]=t}return a}
+function rnd(s){var a=s.split("|");return a[Math.floor(Math.random()*a.length)]}
+function mk(t,l,s){var p=s.split("|"),x={t:t,l:l},o;
+if(t=="G"){x.s=p[0];o=p.slice(1)}else{x.p=p[0];x.s=p[1];o=p.slice(2)}
+x.c=o[0];x.o=shuf(o.slice());return x}
+
+/* Адаптивная оценка (модель IRT, 3PL с фиксированными параметрами):
+   сложность вопроса = уровень CEFR, способность считается по всем ответам. */
+function est(h){var W=[],z=0,m=0,v=0;
+GR.forEach(function(t){var lg=-t*t/6.5;
+h.forEach(function(x){var p=.3+.7/(1+Math.exp(-1.2*(t-x.l+2.5)));lg+=Math.log(x.ok?p:1-p)});
+var w=Math.exp(lg);W.push(w);z+=w;m+=t*w});
+m/=z;GR.forEach(function(t,i){v+=(t-m)*(t-m)*W[i]});return[m,Math.sqrt(v/z)]}
+
+function home(){S=null;window.scrollTo(0,0);speechSynthesis&&speechSynthesis.cancel();
+app.innerHTML='<h1>Какой у вас уровень языка?</h1><p class="lead">Адаптивный тест, как в современных онлайн-экзаменах: каждый ответ меняет сложность следующего вопроса, а уровень считается по всем ответам сразу. Проверяются грамматика, лексика, чтение, аудирование, письмо и говорение. Каждый раз вопросы подбираются заново.</p><div class="grid">'+
+Object.keys(D).map(function(k){var d=D[k];return '<button class="card" onclick="start(\''+k+'\')"><span class="fl">'+d.f+'</span><span><b>'+d.o+'</b><span class="mut">'+N+' адаптивных вопросов, письмо и говорение</span></span></button>'}).join("")+'</div>'}
+
+function start(k){var d=D[k],pool=[];
+d.G.forEach(function(a,l){a.forEach(function(s){pool.push(mk("G",l,s))})});
+["L","R"].forEach(function(t){d[t].forEach(function(s){pool.push(mk(t,+s[0],s.slice(2)))})});
+S={k:k,pool:pool,h:[],th:0,sd:2,cur:null,wd:0,wr:"",sp:null,wt:rnd(d.W),st:rnd(d.S)};render()}
+
+function nx(){var t=T[S.h.length],c=S.pool.filter(function(x){return x.t==t&&!x.u});
+if(!c.length)c=S.pool.filter(function(x){return x.t=="G"&&!x.u});
+var b,bs=99;c.forEach(function(x){var s=Math.abs(x.l-2.5-S.th)+Math.random()*.9;if(s<bs){bs=s;b=x}});
+b.u=1;S.cur=b}
+
+function say(t){if(!window.speechSynthesis){alert("Озвучка недоступна в этом браузере. Попробуйте Chrome или Safari.");return}
+speechSynthesis.cancel();var u=new SpeechSynthesisUtterance(t);u.lang=D[S.k].v;u.rate=.9;speechSynthesis.speak(u)}
+
+function render(){window.scrollTo(0,0);var d=D[S.k],n=S.h.length,h;
+h='<div class="top"><button class="ghost" onclick="home()">← Каталог</button><span>'+d.f+' '+d.o+'</span></div><div class="bar"><i style="width:'+((n+S.wd)/(N+2)*100)+'%"></i></div>';
+if(n<N){if(!S.cur)nx();var x=S.cur,nm={G:"Грамматика и лексика",L:"Аудирование",R:"Чтение"}[x.t];
+h+='<p class="sec">'+nm+', вопрос '+(n+1)+' из '+N+'</p>';
+if(x.t=="R")h+='<blockquote>'+x.p+'</blockquote>';
+if(x.t=="L")h+='<button class="btn" onclick="say(S.cur.p)">🔊 Прослушать</button><span class="mut">Можно повторить. Текст скрыт.</span>';
+h+='<h2>'+x.s+'</h2><div class="opts">'+x.o.map(function(o,j){return '<button class="opt" onclick="pick('+j+')">'+o+'</button>'}).join("")+'<button class="opt skip" onclick="pick(-1)">Не знаю</button></div>'}
+else if(!S.wd){h+='<p class="sec">Письмо</p><h2>'+S.wt+'</h2><p class="mut">Напишите 5–8 предложений на изучаемом языке.</p><textarea id="tx" rows="7" oninput="cnt()"></textarea><p id="wc" class="mut">0 слов</p><button class="btn" onclick="nw(0)">Далее</button><button class="ghost" onclick="nw(1)">Пропустить</button>'}
+else{h+='<p class="sec">Говорение</p><h2>Прочитайте вслух</h2><blockquote>'+S.st+'</blockquote><button class="btn" onclick="say(S.st)">🔊 Образец</button>'+(SR?'<button class="btn" onclick="rec()">🎤 Записать</button>':'<p class="mut">Распознавание речи недоступно в этом браузере. Откройте файл в Chrome, чтобы проверить произношение.</p>')+'<p id="sr"></p><button class="btn" onclick="fin()">Показать результат</button>'}
+app.innerHTML=h}
+
+function pick(j){var x=S.cur;S.h.push({t:x.t,l:x.l,ok:x.o[j]===x.c?1:0});var e=est(S.h);S.th=e[0];S.sd=e[1];S.cur=null;render()}
+function cnt(){$("#wc").textContent=nrm($("#tx").value).length+" слов"}
+function nw(skip){S.wr=skip?"":$("#tx").value;S.wd=1;render()}
+function nrm(s){return s.toLowerCase().replace(/[^\p{L}\s]/gu,"").split(/\s+/).filter(Boolean)}
+function rec(){var r=new SR();r.lang=D[S.k].v;$("#sr").textContent="Слушаю… говорите.";
+r.onresult=function(e){var t=e.results[0][0].transcript,g=nrm(S.st),h=nrm(t);
+S.sp=Math.round(g.filter(function(w){return h.indexOf(w)>-1}).length/g.length*100);
+$("#sr").textContent="Распознано: «"+t+"». Совпадение слов: "+S.sp+"%."};
+r.onerror=function(){$("#sr").textContent="Не удалось распознать. Проверьте доступ к микрофону и попробуйте ещё раз."};
+r.start()}
+
+function wIdx(t){var w=nrm(t),n=w.length;if(n<15)return null;
+var u=new Set(w).size/n,al=w.join("").length/n,sn=Math.max(1,(t.match(/[.!?¿¡]+/g)||[]).length);
+var sc=Math.min(n,100)/100*40+Math.min(Math.max(al-3.5,0)/2,1)*30+Math.min(Math.max(n/sn-5,0)/12,1)*30;
+if(u<.5)sc*=.8;return sc<15?0:sc<30?1:sc<50?2:sc<68?3:sc<85?4:5}
+function ip(a,p){var i=Math.min(4,Math.floor(p));return a[i]+(a[i+1]-a[i])*(p-i)}
+
+function fin(){window.scrollTo(0,0);var d=D[S.k],pos=Math.min(5,Math.max(0,S.th+2.5)),wi=wIdx(S.wr);
+if(wi!==null)pos=pos*.85+wi*.15;
+var f=Math.round(pos),ex="";
+if(S.k=="en")ex="IELTS ≈ "+(Math.round(ip([2,3.25,4.5,6,7.5,8.75],pos)*2)/2).toFixed(1)+"<br>TOEFL iBT ≈ "+Math.round(ip([10,30,57,83,104,117],pos))+"<br>Cambridge: "+["Pre A1","A2 Key","B1 Preliminary","B2 First","C1 Advanced","C2 Proficiency"][f];
+else if(S.k=="es")ex="DELE "+LV[f]+" (Instituto Cervantes)";
+else ex=(f<4?"DELF ":"DALF ")+LV[f]+"<br>TCF ≈ "+["100–199","200–299","300–399","400–499","500–599","600+"][f];
+var h='<div class="top"><button class="ghost" onclick="home()">← Каталог</button><span>'+d.f+' '+d.o+'</span></div><div class="res"><div class="lvl">'+LV[f]+'</div><h2>'+NM[f]+'</h2><p>'+DS[f]+'</p><p class="mut">Индекс: '+Math.round(pos/5*100)+' из 100, точность оценки ±'+S.sd.toFixed(1)+' уровня</p>';
+[["G","Грамматика и лексика"],["L","Аудирование"],["R","Чтение"]].forEach(function(s){var a=S.h.filter(function(x){return x.t==s[0]}),ok=a.filter(function(x){return x.ok}).length;
+h+='<div class="row"><span>'+s[1]+'</span><div class="bar"><i style="width:'+(ok/a.length*100)+'%"></i></div><span>'+ok+'/'+a.length+'</span></div>'});
+h+='<div class="row"><span>Письмо</span><div class="bar"><i style="width:'+(wi===null?0:(wi+1)/6*100)+'%"></i></div><span>'+(wi===null?"—":LV[wi])+'</span></div>';
+h+='<div class="row"><span>Произношение</span><div class="bar"><i style="width:'+(S.sp||0)+'%"></i></div><span>'+(S.sp===null?"—":S.sp+"%")+'</span></div></div>';
+h+='<div class="res"><h2>Примерное соответствие экзаменам</h2><div class="ex">'+ex+'</div><p class="note">Это оценка, а не официальный результат. Шкала сложности вопросов построена по уровням CEFR, но не калибровалась на тысячах участников, как IELTS или TOEFL. Письмо оценивается автоматически по длине и сложности текста, произношение показывает только совпадение слов. Для сертификата нужен настоящий экзамен.</p></div>'+
+'<button class="btn" onclick="start(\''+S.k+'\')">Пройти ещё раз</button><button class="btn" onclick="home()">Другой язык</button>';
+app.innerHTML=h}
+home();
+</script></body></html>
